@@ -1,0 +1,67 @@
+name: tim175-phase2
+
+services:
+
+  postgres-warehouse:
+    image: tylermunger/tim175:phase2-postgres-warehouse
+    environment:
+      POSTGRES_DB:       warehouse
+      POSTGRES_USER:     warehouse
+      POSTGRES_PASSWORD: warehouse
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U warehouse -d warehouse"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  etl:
+    image: tylermunger/tim175:phase2-etl
+    environment:
+      WAREHOUSE_HOST:     postgres-warehouse
+      WAREHOUSE_PORT:     "5432"
+      WAREHOUSE_DB:       warehouse
+      WAREHOUSE_USER:     warehouse
+      WAREHOUSE_PASSWORD: warehouse
+    volumes:
+      # Mount the dbt project from the host so you edit models locally and the
+      # container sees your edits (see Setup Guide).
+      - ./dbt:/workspace/dbt
+    depends_on:
+      postgres-warehouse:
+        condition: service_healthy
+
+  metabase:
+    image: metabase/metabase:v0.50.20
+    ports:
+      - "3000:3000"
+    environment:
+      MB_DB_TYPE: h2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    depends_on:
+      postgres-warehouse:
+        condition: service_healthy
+
+  metabase-setup:
+    image: tylermunger/tim175:phase2-metabase
+    environment:
+      METABASE_URL:       http://metabase:3000
+      MB_ADMIN_EMAIL:     admin@tracer.example
+      MB_ADMIN_PASSWORD:  Tracer2026!
+      WAREHOUSE_HOST:     postgres-warehouse
+      WAREHOUSE_PORT:     "5432"
+      WAREHOUSE_DB:       warehouse
+      WAREHOUSE_USER:     warehouse
+      WAREHOUSE_PASSWORD: warehouse
+    depends_on:
+      metabase:
+        condition: service_healthy
+      postgres-warehouse:
+        condition: service_healthy
+    restart: on-failure

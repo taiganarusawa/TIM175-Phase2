@@ -1,0 +1,18 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Raw extracts from the four Tracer source services (billing, tickets, notifications, identity)."
+    schema: raw
+    tables:
+      - name: identity_orgs
+      - name: identity_users
+      - name: identity_memberships
+      - name: billing_plans
+      - name: billing_customers
+      - name: billing_subscriptions
+      - name: billing_subscription_changes
+      - name: billing_invoices
+      - name: tickets_categories
+      - name: tickets_tickets
+      - name: notifications_events

@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: "Calendar dimension. Shipped pre-built."
+    columns:
+      - name: date_key
+        tests: [unique, not_null]
+      - name: date
+        tests: [unique, not_null]
